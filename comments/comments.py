@@ -196,42 +196,54 @@ def extract_reply_cids(html):
     sel = CSSSelector('.comment-replies-header > .load-comments')
     return [i.get('data-cid') for i in sel(tree)]
 
-def get_comments_by_video(youtube_id, limit=10000):
+def get_comments_by_video(channel_title, youtube_id, limit=10000):
 
-    try:
+    PATH='../data/comment/' + channel_title + "/" + youtube_id + ".csv"
 
-        if not youtube_id:
-            raise ValueError('L\'id de channel n\'est pas valide. ')
+    if os.path.isfile(PATH) :
+        print("File already existed")
+        
+    else:
+        try:
+            if not youtube_id:
+                raise ValueError('L\'id de channel n\'est pas valide. ')
 
-        print('Téléchargement de commentaire de vidéo: ', youtube_id)
-        comments_data = pd.DataFrame(columns=['text','votes'])
+            print('Téléchargement de commentaire de vidéo: ', youtube_id)
+            comments_data = pd.DataFrame(columns=['text','votes'])
 
-        count = 0
+            count = 0
 
-        start_time = time.time()
-        for comment in download_comments(youtube_id):
-            comments_data = comments_data.append({'text':comment['text'],'votes':comment['votes']},ignore_index=True)
-            count += 1
+            start_time = time.time()
+            for comment in download_comments(youtube_id):
+                comments_data = comments_data.append({'text':comment['text'],'votes':comment['votes']},ignore_index=True)
+                count += 1
 
-            print('Downloaded %d comment(s)\r' % count)
-            if limit and count >= limit:
-                break
-        print('\n[{:.2f} seconds] Done!'.format(time.time() - start_time))
+                print('Downloaded %d comment(s)\r' % count)
+                if limit and count >= limit:
+                    break
+            print('\n[{:.2f} seconds] Done!'.format(time.time() - start_time))
 
-    except Exception as e:
-        print('Error:', str(e))
-        sys.exit(1)
+        except Exception as e:
+            print('Error:', str(e))
+            sys.exit(1)
+
+    outdir = '../data/comment/' + channel_title
+
+    if not os.path.exists(outdir):
+        os.mkdir(outdir) 
+
+    comments_data.to_csv(PATH)
     return comments_data
 
 
-def get_comments_by_videos(channeldTitle, video_id, API_key, max):
+def get_comments_by_videos(channel_title, video_id, API_key, max):
     '''
     This function looks at in the path if the comment dataframe is existed, if is not it collect all comments of a video and saves to a csv file. 
     ------------------
     params:
     @video_id: Id of single video
     '''
-    PATH='data/comment/' + channeldTitle + "/" + video_id + ".csv"
+    PATH='../data/comment/' + channel_title + "/" + video_id + ".csv"
 
     if os.path.isfile(PATH) :
         print("File already existed")
@@ -265,7 +277,8 @@ def get_comments_by_videos(channeldTitle, video_id, API_key, max):
 
         outname = comments['videoId'][0]+".csv"
 
-        outdir = "data/comment/"+ channeldTitle
+        outdir = '../data/comment/' + channel_title
+
         if not os.path.exists(outdir):
             os.mkdir(outdir)
 
@@ -278,6 +291,6 @@ def get_comments_by_videos(channeldTitle, video_id, API_key, max):
 if __name__ == '__main__':
     # API_key = "AIzaSyBP8uRqpf_YNTNdfbvb2DKAofTNZzmo4fw"
     # get_comments_by_video('Lama Faché', "jRp4x-RbesE",API_key)
-    comments_data = get_comments_by_video("Gx5JhyUwvWo",limit=20)
+    comments_data = get_comments_by_video("Machine Learnia","AFGvDndE2yc",limit=20000)
     print(comments_data.head())
     print("longuer de commentaires: {}".format(comments_data.shape))

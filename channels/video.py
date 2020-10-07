@@ -10,6 +10,7 @@ from channel import get_general_info
 import json
 import requests
 import pandas as pd
+from apiclient.discovery import build
 
 # def get_channel_ID(youtube_channel_url):
 #     '''
@@ -63,13 +64,14 @@ def get_id_by_search(channel_title, API_KEY):
     url = 'https://www.googleapis.com/youtube/v3/search?type=channel&part=id,snippet&q={}&key={}&regionCode=FR'.format(channel_title,API_KEY)
 
     inp = requests.get(url)
-    resp = inp.json()   
+    resp = inp.json()
+    print(resp)
     channel_id = resp['items'][0]['snippet']['channelId']
     channel_title = resp['items'][0]['snippet']['title']
     return channel_id,channel_title
 
 
-def get_all_video_in_channel_with_id(channel_id,channel_title, API_KEY):
+def get_channel_videos_ids(channel_id,channel_title, API_KEY):
     '''
     This function can get all videos in a Youtube channel with the the id of channel.
     '''
@@ -107,12 +109,55 @@ def get_all_video_in_channel_with_id(channel_id,channel_title, API_KEY):
                 videoId = video['id']['videoId']
                 videos_ids = videos_ids.append({'videoId':videoId}, ignore_index=True)
 
-        outdir = "data/video/"+ channel_title
+        outdir = "../data/video/"+ channel_title
         if not os.path.exists(outdir):
             os.mkdir(outdir)
         videos_ids.to_csv(PATH)
     return videos_ids['videoId']
 
+
+def get_channel_videos_ids_apiclient(channel_id, channel_title, API_key):
+    '''
+    This function can get all videos in a Youtube channel with .
+    '''
+    
+    PATH="../data/video/"+ channel_title +"/VideoIds.csv"
+
+    if os.path.isfile(PATH) :
+        df = pd.read_csv(PATH, index_col=0)
+        return df['videoId']
+        
+    else:
+        youtube = build('youtube','v3', developerKey=API_key)
+        res = youtube.channels().list(id=channel_id, part='contentDetails').execute()
+        playlistId=res['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+
+        videos = []
+        next_page_token = None
+    
+        while 1:
+            res = youtube.playlistItems().list(playlistId=playlistId,
+                                      part='snippet,id',
+                                      maxResults=50,
+                                      pageToken=next_page_token).execute()
+            videos += res['items']
+            next_page_token = res.get('nextPageToken')
+
+            if next_page_token is None:
+                break
+
+        videos_ids = pd.DataFrame(columns=['videoId'])
+        
+        for video in videos:
+            if video ['snippet']['resourceId']['videoId']:
+                videoId = video['snippet']['resourceId']['videoId']
+                videos_ids = videos_ids.append({'videoId':videoId}, ignore_index=True)
+
+        outdir = "../data/video/"+ channel_title
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+        videos_ids.to_csv(PATH)
+    return videos_ids['videoId']
 
 def get_videos_with_stastic(channelId, channelTitle, video_ids, API_key): 
 
@@ -185,12 +230,27 @@ def list_videos_to_dataframe(list_video):
             defaultAudioLanguage = video['snippet']['defaultAudioLanguage']
         except:
             defaultAudioLanguage =""
-            
-        viewCount = video['statistics']['viewCount']
-        likeCount = video['statistics']['likeCount']
-        dislikeCount = video['statistics']['dislikeCount']
-        favoriteCount = video['statistics']['favoriteCount']
-        commentCount = video['statistics']['commentCount']
+        try:  
+            viewCount = video['statistics']['viewCount']
+        except:
+            viewCount = 0
+        try:
+            likeCount = video['statistics']['likeCount']
+        except:
+            likeCount = 0
+        try:
+            dislikeCount = video['statistics']['dislikeCount']
+        except:
+            dislikeCount = 0
+        try:
+            favoriteCount = video['statistics']['favoriteCount']
+        except:
+            favoriteCount = 0
+        try:
+            commentCount = video['statistics']['commentCount']
+        except:
+            commentCount = 0        
+
         
         videos_complete_data = videos_complete_data.append({"videoId":videoId,
                                     "channelId":channelId,
@@ -213,9 +273,10 @@ def list_videos_to_dataframe(list_video):
 
 if __name__ == '__main__':
     API_key = get_API_key(1)
-    channel_id, _ = get_id_by_search("SQUEEZIE", API_key)
+    # channel_id, _ = get_id_by_search("Machine Learnia", API_key)
+    channel_id = "UCmpptkXu8iIFe6kfDK5o7VQ"
     channel_info = get_general_info(channel_id, API_key)
     channel_title = channel_info['snippet']['title']
-    video_ids = get_all_video_in_channel_with_id(channel_id, channel_title, API_key)
-    get_videos_with_stastic( channel_id, channel_title, video_ids, API_key)
-
+    video_ids = get_channel_videos_ids_apiclient(channel_id, channel_title, API_key)
+    videos = get_videos_with_stastic( channel_id, channel_title, video_ids, API_key)
+    print(videos['commentCount'].sum())
