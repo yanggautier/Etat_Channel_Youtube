@@ -98,16 +98,49 @@
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Channels dans la base:</h6>
             <form action="#" method="GET">
-              <div class="overflow-auto" style="max-height: 350px;">
-
-                <button name="channel_id" class="btn btn-light" href="#comments" type="submit"
-                  value="">channel_title</button>
-
+              <div class="overflow-auto text-center"" style=" max-height: 350px;">
+                {% for channel in channels%}
+                <button name="channel_id" class="btn btn-light p-2" href="" type="submit"
+                  value="{{channel.channelId}}">{{channel.channelTitle}}</button>
+                <br>
+                {% endfor %}
               </div>
             </form>
           </div>
         </div>
       </li>
+
+      <!-- Nav Item - Pages Collapse Menu -->
+      {% if results is defined %}
+
+      <div class="sidebar-heading">
+        Channels recommandés
+      </div>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#channelsReco" aria-expanded="true"
+          aria-controls="channelsReco">
+          <i class="fas fa-film"></i>
+          <span>Channels recommandés</span>
+        </a>
+        <div id="channelsReco" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Tout les vidéos:</h6>
+            <form action="#" method="GET">
+
+              <div class="overflow-auto" style="max-height: 350px;">
+                <input type="hidden" name="channel_id" value="{{ results.id }}">
+                {% for info in results.videoInfo%}
+                <button name="video_id" class="btn btn-light" href="#comments" type="submit"
+                  value="{{info.id}}">{{info.title}}</button>
+                {% endfor %}
+              </div>
+            </form>
+          </div>
+        </div>
+      </li>
+      {% endif %}
+
+
       <!-- Divider -->
       <hr class="sidebar-divider">
 
@@ -683,9 +716,6 @@
   <!-- Page level plugins -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
 
-  <!-- Page level custom scripts -->
-  <!-- <script src="{{url_for('static', filename='js/demo/chart-area-demo.js')}}"></script> -->
-  <!-- <script src="{{url_for('static', filename='js/demo/chart-pie-demo.js')}}"></script> -->
 
   {% if results is defined %}
   <script>
@@ -839,17 +869,17 @@
         labels: dates,
         datasets: [{
           label: "Nombre de vues",
-          lineTension: 0.3,
+          lineTension: 0.5,
           backgroundColor: "rgba(252, 87, 51, 0.05)",
           borderColor: "rgba(255, 87, 51, 1)",
-          pointRadius: 3,
+          pointRadius: 1,
           pointBackgroundColor: "rgba(255, 87, 51, 1)",
           pointBorderColor: "rgba(255, 87, 51, 1)",
           pointHoverRadius: 3,
           pointHoverBackgroundColor: "rgba(255, 87, 51, 1)",
           pointHoverBorderColor: "rgba(255, 87, 51, 1)",
-          pointHitRadius: 10,
-          pointBorderWidth: 2,
+          pointHitRadius: 2,
+          pointBorderWidth: 1,
           data: viewCounts,
         }],
       },

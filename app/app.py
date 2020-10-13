@@ -1,6 +1,7 @@
 from flask import Flask, url_for, redirect, render_template, request
 from scrap.video import *
 from scrap.comments import *
+from scrap.channel import *
 from cred import get_API_key
 from models.channel_analyse import *
 from models.video_analyse import *
@@ -11,10 +12,19 @@ from sklearn.feature_extraction.text import CountVectorizer
 from cachetools import cached, TTLCache
 
 
-API_key = get_API_key(0)
+API_key = get_API_key(2)
 
 app = Flask(__name__)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 cache = TTLCache(maxsize=100, ttl=60)
+
+@app.after_request
+def add_header(response):
+    # response.cache_control.no_store = True
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
 
 @cached(cache)
 def read_tokenize_model():
@@ -28,6 +38,8 @@ def index():
     # Load sentiment-analysis models
 
     channel_id = request.args.get('channel_id')
+    channels = get_all_channels()
+
     if channel_id:
   
         df = get_general_info(channel_id, API_key)
@@ -76,7 +88,8 @@ def index():
             'IT': 'Italie',
             'GE': 'Germany',
             'CN': 'Chine',
-            'AU': 'Australie'
+            'AU': 'Australie',
+            'CA': 'Canada'
         }
 
         channel_title = df['snippet']['title']
@@ -88,18 +101,33 @@ def index():
         channel_tags_to_wordcloud(videos)
 
         videos['categoryId'] = videos['categoryId'].astype(int).replace(categories)
+        try:
+            viewCount = int(df['statistics']['viewCount'])
+        except:
+            viewCount = 0
 
-        viewCount = int(df['statistics']['viewCount'])
-        subscriberCount = int(df['statistics']['subscriberCount'])
-        videoCount = int(df['statistics']['videoCount'])
+        try:    
+            subscriberCount = int(df['statistics']['subscriberCount'])
+        except:
+            subscriberCount = 0
+
+        try:    
+            videoCount = int(df['statistics']['videoCount'])
+        except:
+            videoCount = 0
+
         commentCount = videos['commentCount'].astype(int).sum()
         likeCount = videos['likeCount'].astype(int).sum()
         dislikeCount = videos['dislikeCount'].astype(int).sum()
         categories = videos['categoryId'].value_counts()
+        try: 
+            country = countries[df['snippet']['country']]
+        except:
+            country = ""
         try:
             language = df['snippet']['defaultLanguage']
         except:
-            language = df['snippet']['country']
+            language = ""
 
         # get 8 must common words and frequencies , this is used to tag cards 
         channel_tag_words,channel_tag_counts = most_common_8_words(videos)
@@ -115,7 +143,7 @@ def index():
                     'subscriberCount': f'{subscriberCount:,}',
                     'videoCount': f'{videoCount:,}',
                     'image': df['snippet']['thumbnails']['default']['url'],
-                    'country': countries[df['snippet']['country']],
+                    'country': country,
                     'language': language,
                     'commentCount': f'{commentCount:,}',
                     'likeCount': f'{likeCount:,}',
@@ -129,11 +157,13 @@ def index():
                     'channel_tag_counts':channel_tag_counts,
                     'videoInfo': videoInfo,
         }
+
+        recommend_channels= ""
         
         # get value of request variable 'video_id'
         video_id = request.args.get('video_id')
         if video_id is None:
-            return render_template("index.html", results = results)
+            return render_template("index.html", results=results, channels=channels, recommend_channels=recommend_channels)
         else:
             
             comments_df = get_comments_by_video(video_id)
@@ -145,8 +175,8 @@ def index():
                 'sentiments': [positive_nb,negative_nb]
             }
             print(video_results)
-            return render_template("index.html", results = results, video_results=video_results)
+            return render_template("index.html", results=results, video_results=video_results, channels=channels, recommend_channels=recommend_channels)
 
-    return render_template("index.html")
+    return render_template("index.html", channels=channels)
 if __name__ == '__main__':
     app.run(debug=True)

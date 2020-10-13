@@ -1,0 +1,20 @@
+
+version: '3.7'
+
+services:
+
+  flask:
+    build:
+        context: ./app
+        dockerfile: Dockerfile
+    container_name: flask
+    links: 
+      - mongodb
+    ports:
+      - "5000:5000"
+    command: /usr/bin/python /app/app.py
+
+  mongodb:
+    image: mongo:4.0.4
+    ports:
+      - "27017:27017"
