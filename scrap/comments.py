@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-
 import io
 import json
 import os
@@ -11,9 +7,9 @@ import pandas as pd
 import argparse
 import lxml.html
 import requests
+from cred import get_API_key
 from lxml.cssselect import CSSSelector
 from pymongo import MongoClient
-from models.video_analyse import *
 
 YOUTUBE_VIDEO_URL = 'https://www.youtube.com/watch?v={youtube_id}'
 YOUTUBE_COMMENTS_AJAX_URL_OLD = 'https://www.youtube.com/comment_ajax'
@@ -199,8 +195,62 @@ def extract_reply_cids(html):
     sel = CSSSelector('.comment-replies-header > .load-comments')
     return [i.get('data-cid') for i in sel(tree)]
 
-def get_comments_by_video(video_id, limit=5000):
+# def get_comments_by_video(video_id, limit=500):
 
+#     try:
+#         if not video_id:
+#             raise ValueError('L\'id de channel n\'est pas valide. ')
+
+#         client = MongoClient('localhost', 27017)
+#         db = client.youtube
+#         collection = db.comments
+
+#         comments_in_db = collection.find({"video_id": video_id})
+#         df =  pd.DataFrame(list(comments_in_db))
+        
+#         if df.shape[0] >0:
+#             return df
+#             client.close()
+#         else:
+#             print('Téléchargement de commentaire de vidéo: ', video_id)
+            
+#             client = MongoClient('localhost', 27017)
+#             db = client.youtube
+#             collection = db.comments
+
+#             count = 0
+
+#             start_time = time.time()
+#             for comment in download_comments(video_id):
+                
+#                 comment_df = {'video_id':video_id,'comment_id':comment['cid'], 'text':comment['text'],'votes':comment['votes']}
+
+#                 if collection.count_documents({'comment_id': comment['cid']}) > 0:
+#                     pass
+#                 else:
+#                     collection.insert_one(comment_df)
+
+#                 count += 1
+
+#                 print('Downloaded %d comment(s)\r' % count)
+#                 if limit and count >= limit:
+#                     break
+            
+#             print('\n[{:.2f} seconds] Done!'.format(time.time() - start_time))
+
+#             comments_in_db = collection.find({"video_id": video_id})
+#             comments_data = pd.DataFrame(list(comments_in_db)) 
+#             client.close()
+#             return comments_data
+
+#     except Exception as e:
+#         print('Error:', str(e))
+#         sys.exit(1)
+
+def get_comments_by_video(video_id, limit, API_Key):
+    '''
+    This function can get comments by videos, if limit is smaller ou equal to 500 it use Youtu APi to get comments, else we use ajax to scrap comments
+    '''
     try:
         if not video_id:
             raise ValueError('L\'id de channel n\'est pas valide. ')
@@ -216,31 +266,75 @@ def get_comments_by_video(video_id, limit=5000):
             return df
             client.close()
         else:
-            print('Téléchargement de commentaire de vidéo: ', video_id)
-            
             client = MongoClient('localhost', 27017)
             db = client.youtube
             collection = db.comments
 
-            count = 0
+            if limit <= 500:
+                # request = "https://www.googleapis.com/youtube/v3/commentThreads?key={}&textFormat=plainText&part=id,snippet&videoId={}&maxResults=50".format(API_Key, video_id)
+                # response = requests.get(request)
+                # json = response.json()
+                # comments = json['items']
 
-            start_time = time.time()
-            for comment in download_comments(video_id):
+                # try:
+                #     nextPageToken = json['nextPageToken']
+                # except:
+                #     nexPageToken = None
+
+                # while nextPageToken is not None and len(comments)< limit:
+                #     request = "https://www.googleapis.com/youtube/v3/commentThreads?key={}&textFormat=plainText&part=id,snippet&videoId={}&maxResults=50&nextPageToken={}".format(API_Key,video_id, nextPageToken)
+                #     response = requests.get(request)
+                #     json = response.json()
+                #     comments += json['items']
+                #     try:
+                #         nextPageToken = json['nextPageToken']
+                #     except:
+                #         nexPageToken = None
+                comments = []
+                next_page_token = None
+
+                while 1:
+                    res = "https://www.googleapis.com/youtube/v3/commentThreads?key={}&textFormat=plainText&part=id,snippet&videoId={}&maxResults=50&nextPageToken={}".format(API_Key,video_id, next_page_token)
+
+                    comments += res['items']
+                    next_page_token = res.get('nextPageToken')
+
+                    if next_page_token is None:
+                        break   
                 
-                comment_df = {'video_id':video_id,'comment_id':comment['cid'], 'text':comment['text'],'votes':comment['votes']}
-
-                if collection.count_documents({'comment_id': comment['cid']}) > 0:
-                    pass
-                else:
+                for comment in comments:
+                    comment_id = comment['id']
+                    comment_vote = comment['snippet']['topLevelComment']['snippet']['textOriginal']
+                    comment_text = comment['snippet']['topLevelComment']['snippet'][ 'likeCount']
+                    comment_df = {'video_id':video_id,'comment_id':comment_id, 'text':comment_vote,'votes':comment_text}
                     collection.insert_one(comment_df)
+                
+            else:    
+                print('Téléchargement de commentaire de vidéo: ', video_id)
+                
+                client = MongoClient('localhost', 27017)
+                db = client.youtube
+                collection = db.comments
 
-                count += 1
+                count = 0
 
-                print('Downloaded %d comment(s)\r' % count)
-                if limit and count >= limit:
-                    break
-            
-            print('\n[{:.2f} seconds] Done!'.format(time.time() - start_time))
+                start_time = time.time()
+                for comment in download_comments(video_id):
+                    
+                    comment_df = {'video_id':video_id,'comment_id':comment['cid'], 'text':comment['text'],'votes':comment['votes']}
+
+                    if collection.count_documents({'comment_id': comment['cid']}) > 0:
+                        pass
+                    else:
+                        collection.insert_one(comment_df)
+
+                    count += 1
+
+                    print('Downloaded %d comment(s)\r' % count)
+                    if limit and count >= limit:
+                        break
+                
+                print('\n[{:.2f} seconds] Done!'.format(time.time() - start_time))
 
             comments_in_db = collection.find({"video_id": video_id})
             comments_data = pd.DataFrame(list(comments_in_db)) 
@@ -252,7 +346,7 @@ def get_comments_by_video(video_id, limit=5000):
         sys.exit(1)
 
 if __name__ == '__main__':
-
-    comments_df = get_comments_by_video("MGg318fNSDI", limit=5000)
+    API_key = get_API_key(1)
+    comments_df = get_comments_by_video("MGg318fNSDI", 500, API_key)
     positive_nb, negative_nb = sentiment_analysis(comments_df)
     print(positive_nb, negative_nb)

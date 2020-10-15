@@ -1,32 +1,42 @@
 import os
-import os.path
+import nltk
 import sys
+import unidecode
+import re
+import os.path
 from cred import get_API_key
 from scrap.channel import get_general_info
 import json
 import requests
+import string
 import pandas as pd
 from apiclient.discovery import build
 from pymongo import MongoClient
 import datetime
+from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
+nltk.download('punkt')
 
-
-def scrap_youtubers_list():
+def nettoyage(texte):
     '''
-    With this function, we can get a list of youtubers in France et the category of their channel, and save all this in a csv file.
+    This function remove all punctions and french stop words, replace accent letters, and replace words by stemming words
     '''
-    response = requests.get("https://us.youtubers.me/france/all/top-1000-youtube-channels-in-france")
-    content = response.content
-    parser = BeautifulSoup(content,'html.parser')
-    table = parser.find('div',{"class":"top-charts-box"})
-    data_channels = pd.DataFrame(columns=['youtuber','category'])
-    trs = table.find_all('tr')
-    for i in range(1, len(trs)):
-        tds = trs[i].find_all('td')
-        youtuber = tds[1].text.strip()
-        category = tds[5].text.strip()
-        data_channels = data_channels.append({"youtuber": youtuber, "category":category}, ignore_index=True)
-    return data_channels
+    stemmer = SnowballStemmer("french")
+    tex=[]
+    
+    sw_nltk = stopwords.words('french')+['vais','dont','tres'+'the'+'in'+'this','they','you','if','else']
+    sw_nltk=[unidecode.unidecode(elem) for elem in sw_nltk]
+    
+    remove_punct_dict = dict((ord(punct), None) for punct in string.punctuation)
+    texte=unidecode.unidecode(texte.lower().translate(remove_punct_dict))
+    
+    p="([a-z]+)"
+    for elem in re.findall(p,texte):
+        if elem in sw_nltk or elem==' ':
+            continue
+        else:
+            tex.append(stemmer.stem(elem))
+    return ' '.join(tex)
 
 def get_id_by_search(channel_title, API_KEY):
     '''
@@ -63,51 +73,109 @@ def get_channel_videos_ids_apiclient(channel_id, API_key):
 
         if next_page_token is None:
             break
-
     videos_ids = [video['snippet']['resourceId']['videoId'] for video in videos]
 
     return videos_ids
 
-def get_videos_with_stastic(channelId, video_ids, API_key): 
+def get_videos_with_stastic(channelId, video_ids, videoCount, API_key): 
     '''
     This function get all statistics of channel with just channelId
     '''
     client = MongoClient('localhost', 27017)
     db = client.youtube
     collection = db.videos
+    df_videos = collection.find({"channelId":  channelId})
+    df_videos = pd.DataFrame(list(df_videos))
 
-    videos_in_db = collection.find({'channelId': channelId})
-    df =  pd.DataFrame(list(videos_in_db))  
+    difference_len = videoCount - df_videos.shape[0]
+
+    video_ids2 = video_ids[:difference_len]
+
     
-    if df.shape[0] > 0:
+    if len(video_ids2) == 0:
+        videos_in_db = collection.find({'channelId': channelId})
+        df =  pd.DataFrame(list(videos_in_db))
+
+        # df['corpus'] = df['channelTitle']  + " " + df['videoTitle'] + " " + df['videoTags']
+        # client = MongoClient('localhost', 27017)
+
+        # collection_channels = db.channels
+        # current_channel = collection_channels.find({'channelId':channelId})
+        # df_current_channel = pd.DataFrame(list(current_channel))
+        
+        # if df_current_channel.shape[0] > 0:
+        #     pass
+        # else:
+        #     corpus = "".join(df['corpus'])
+        #     corpusClean = nettoyage(corpus)
+            
+        #     if len(corpusClean) == 0:
+        #         corpusClean = ""
+
+        #     print("corpusClean: {}".format(corpusClean))
+        #     dicte = {'channelId': channelId,'channelTitle':df['channelTitle'][0],'tagsToken':corpusClean}
+
+        #     print("dicte: {}".format(dicte))
+        #     collection_channels.insert_one(dicte)
+
         client.close()
         return df
-
     else:
-        length = len(video_ids)
+        client.close()
+        length = len(video_ids2)
         videos_with_stastic = []
         nb = length//50
         for i in range(nb):
-            ids = ",".join(video_ids[i*50:(i+1)*50])
+            ids = ",".join(video_ids2[i*50:(i+1)*50])
             request = "https://www.googleapis.com/youtube/v3/videos?part=snippet,id,statistics&key={}&id={}".format(API_key,ids)
             response = requests.get(request)
             json = response.json()
             videos_with_stastic +=json['items']
 
         if length%50>0:
-            ids = ",".join(video_ids[-(length-nb*50):])
+            ids = ",".join(video_ids2[-(length-nb*50):])
             request = "https://www.googleapis.com/youtube/v3/videos?part=snippet,id,statistics&key={}&id={}".format(API_key,ids)
             response = requests.get(request)
             json = response.json()
             videos_with_stastic += json['items']
+
+        save_videos_to_mongodb(videos_with_stastic)
+        client = MongoClient('localhost', 27017)
+        db = client.youtube
+        collection = db.videos
+        videos_in_db = collection.find({"channelId": channelId})
+        client.close()
+        df_videos = pd.DataFrame(list(videos_in_db))
+        #todo @bug à corriger,ne les tags nettoyés n'a pas de 
         
-        df = save_videos_to_mongodb(videos_with_stastic)
-        return df
+        df_videos['corpus'] = df_videos['channelTitle']  + " " + df_videos['videoTitle'] + " " + df_videos['videoTags']
+        client = MongoClient('localhost', 27017)
+
+        collection_channels = db.channels
+        current_channel = collection_channels.find({'channelId':channelId})
+        df_current_channel = pd.DataFrame(list(current_channel))
+        
+        if df_current_channel.shape[0] > 0:
+            pass
+        else:
+            corpus = "".join(df_videos['corpus'])
+            corpusClean = nettoyage(corpus)
+            
+            if len(corpusClean) == 0:
+                corpusClean = ""
+
+            print("corpusClean: {}".format(corpusClean))
+            dicte = {'channelId': channelId,'channelTitle':channelTitle,'tagsToken':corpusClean}
+
+            print("dicte: {}".format(dicte))
+            collection_channels.insert_one(dicte)
+        client.close()
+        return df_videos
 
 
 def save_videos_to_mongodb(list_video):
     '''
-    This function can save the list of information videos with youtube api v3 to mongodb databse, 
+    This function can save the list of information videos with youtube api v3 to collection videos mongodb , save ID, channel, and token in to collection channels in mongodb.
     in each row we have all information about "videoId","channelId", "channelTitle","videoTitle", "videoDate", "videoDescription","categoryId","videoTags", "defaultLanguage","defaultAudioLanguage", "viewCount","dislikeCount","favoriteCount","commentCount"
     '''
 
@@ -121,14 +189,18 @@ def save_videos_to_mongodb(list_video):
         channelTitle = video['snippet']['channelTitle']
         videoTitle = video['snippet']['title']
         videoDate = video['snippet']['publishedAt']
+        # videoTags = video['snippet']['topLevelComment']['snippet']['textOriginal']
 
         videoDate = datetime.datetime.strptime(videoDate,"%Y-%m-%dT%H:%M:%SZ")
         new_format = "%Y-%m-%d"
         videoDate = videoDate.strftime(new_format)
 
-        videoDescription = video['snippet']['description'].replace("\n","")
-        
         categoryId = video['snippet']['categoryId']
+        try:
+            videoDescription  = video['snippet']['description'].replace("\n","")
+        except:
+            videoDescription = ""
+
         try:
             videoTags = " ".join(video['snippet']['tags'])
         except:
@@ -179,22 +251,26 @@ def save_videos_to_mongodb(list_video):
                     "commentCount":commentCount
                     }
 
-        collection.insert_one(video_info)
-        # videos_complete_data = videos_complete_data.append(video_info,ignore_index=True)
+        video_in_base = collection.find({"videoId": videoId})
+        video_def = pd.DataFrame(list(video_in_base))
 
-    print("Save to mongodb with success! ")
-    videos_in_db = collection.find({"channelId": channelId})
-    df_videos = pd.DataFrame(list(videos_in_db))
+        if video_def.shape[0] > 0:
+            pass
+        else:
+            collection.insert_one(video_info)
+            # videos_complete_data = videos_complete_data.append(video_info,ignore_index=True)
     client.close()
-    return df_videos
+    print("Save to mongodb with success! ")
+    
     # return videos_info
 
 if __name__ == '__main__':
     API_key = get_API_key(1)
     # channel_id, _ = get_id_by_search("Machine Learnia", API_key)
-    channel_id = "UCmpptkXu8iIFe6kfDK5o7VQ"
+    channel_id = "UCUe6ZpY6TJ0no8jI4l2iLxw"
     channel_info = get_general_info(channel_id, API_key)
     channel_title = channel_info['snippet']['title']
-    video_ids = get_channel_videos_ids_apiclient(channel_id, channel_title, API_key)
-    videos = get_videos_with_stastic( channel_id, channel_title, video_ids, API_key)
-    print(videos['commentCount'].sum())
+    video_ids = get_channel_videos_ids_apiclient(channel_id, API_key)
+    
+    # videos = get_videos_with_stastic( channel_id, channel_title, video_ids, API_key)
+    # print(len(video_ids))

@@ -18,6 +18,10 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 cache = TTLCache(maxsize=100, ttl=60)
 
+
+tokenizer = AutoTokenizer.from_pretrained("tblard/tf-allocine")
+model = TFAutoModelForSequenceClassification.from_pretrained("tblard/tf-allocine")
+
 @app.after_request
 def add_header(response):
     # response.cache_control.no_store = True
@@ -26,12 +30,10 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
-@cached(cache)
-def read_tokenize_model():
-    tokenizer = AutoTokenizer.from_pretrained("tblard/tf-allocine")
-    model = TFAutoModelForSequenceClassification.from_pretrained("tblard/tf-allocine")
+# @cached(cache)
+# def read_tokenize_model():
 
-    return tokenizer, model
+    # return tokenizer, model
 
 @app.route('/',  methods=['GET'])
 def index():
@@ -92,15 +94,6 @@ def index():
             'CA': 'Canada'
         }
 
-        channel_title = df['snippet']['title']
-        # get the list of all video IDs in the channel, we use that to get below all informations about their videos
-        video_ids = get_channel_videos_ids_apiclient(channel_id, API_key)
-        # get the list all informations of videos
-        videos = get_videos_with_stastic(channel_id, video_ids, API_key)
-        # save wordcloud image to app/static/img/channel_wordcloud.png
-        channel_tags_to_wordcloud(videos)
-
-        videos['categoryId'] = videos['categoryId'].astype(int).replace(categories)
         try:
             viewCount = int(df['statistics']['viewCount'])
         except:
@@ -116,6 +109,16 @@ def index():
         except:
             videoCount = 0
 
+        channel_title = df['snippet']['title']
+        # get the list of all video IDs in the channel, we use that to get below all informations about their videos
+        video_ids = get_channel_videos_ids_apiclient(channel_id, API_key)
+        # get the list all informations of videos
+        videos = get_videos_with_stastic(channel_id, video_ids, videoCount, API_key)
+        # save wordcloud image to app/static/img/channel_wordcloud.png
+        channel_tags_to_wordcloud(videos)
+
+        videos['categoryId'] = videos['categoryId'].astype(int).replace(categories)
+
         commentCount = videos['commentCount'].astype(int).sum()
         likeCount = videos['likeCount'].astype(int).sum()
         dislikeCount = videos['dislikeCount'].astype(int).sum()
@@ -127,7 +130,10 @@ def index():
         try:
             language = df['snippet']['defaultLanguage']
         except:
-            language = ""
+            try:
+                language = df['snippet']['country']
+            except:
+                language = ""
 
         # get 8 must common words and frequencies , this is used to tag cards 
         channel_tag_words,channel_tag_counts = most_common_8_words(videos)
@@ -158,7 +164,7 @@ def index():
                     'videoInfo': videoInfo,
         }
 
-        recommend_channels= ""
+        recommend_channels = get_recommand_channels(channel_id,3)
         
         # get value of request variable 'video_id'
         video_id = request.args.get('video_id')
@@ -166,8 +172,8 @@ def index():
             return render_template("index.html", results=results, channels=channels, recommend_channels=recommend_channels)
         else:
             
-            comments_df = get_comments_by_video(video_id)
-            tokenizer, model = read_tokenize_model()
+            comments_df = get_comments_by_video(video_id, 2000, API_key)
+
             positive_nb, negative_nb = sentiment_analysis(comments_df, model, tokenizer)
  
             video_results={

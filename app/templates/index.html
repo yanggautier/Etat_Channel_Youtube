@@ -124,14 +124,13 @@
         </a>
         <div id="channelsReco" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Tout les vidéos:</h6>
+            <h6 class="collapse-header text-center">Channels recommandés:</h6>
             <form action="#" method="GET">
 
-              <div class="overflow-auto" style="max-height: 350px;">
-                <input type="hidden" name="channel_id" value="{{ results.id }}">
-                {% for info in results.videoInfo%}
-                <button name="video_id" class="btn btn-light" href="#comments" type="submit"
-                  value="{{info.id}}">{{info.title}}</button>
+              <div class="overflow-auto text-center" style="max-height: 350px;">
+                {% for channel in recommend_channels%}
+                <button name="channel_id" class="btn btn-light" href="" type="submit"
+                  value="{{channel.channelId}}">{{channel.channelTitle}}</button>
                 {% endfor %}
               </div>
             </form>
@@ -139,6 +138,7 @@
         </div>
       </li>
       {% endif %}
+      <!-- end if channel_id is defined  -->>
 
 
       <!-- Divider -->
@@ -597,11 +597,34 @@
 
 
           </div>
+          {% else %}
+          <div class="container my-4 pt-5">
+
+            <div class="border border-light p-3 my-4">
+
+
+
+              <h2 class="p-2 bd-highlight col-example text-danger text-center">Pour utiliser cette application vous
+                devez avoir un
+                ID de channel Youtube ou cliquer sur les channels qu'on a dans la base de donnée.</h2>
+
+              <h3 class="p-2 text-center">Pour avoir un ID d'un channel Youtube, vous pouvez allez sur la page de
+                channel
+                Youtube et recopier
+                l'url de channel et cliquer sur le lien. <a
+                  href="https://commentpicker.com/youtube-channel-id.php#js-youtube-url" target="_blank"
+                  class="text-warning">Lien pour
+                  avoir l'ID</a> </h3>
+
+            </div>
+
+          </div>
           {% endif %}
-          <hr />
+
 
 
           {% if video_results is defined %}
+          <hr />
           <!-- Content Row -->
           <div class="row">
             <div class="col-lg-6 mb-4">
@@ -625,7 +648,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-danger">Analyse des commentaires</h6>
+                  <h6 class="m-0 font-weight-bold text-danger">Analyse des commentaires de ce vidéo</h6>
                   <div class="dropdown no-arrow">
                     <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
                       aria-haspopup="true" aria-expanded="false">
@@ -657,6 +680,8 @@
 
           {% endif %}
 
+
+
         </div>
         <!-- /.container-fluid -->
       </div>
@@ -672,347 +697,347 @@
       </footer>
       <!-- End of Footer -->
 
+
+      <!-- End of Content Wrapper -->
+
     </div>
-    <!-- End of Content Wrapper -->
+    <!-- End of Page Wrapper -->
 
-  </div>
-  <!-- End of Page Wrapper -->
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
 
-  <!-- Scroll to Top Button-->
-  <a class="scroll-to-top rounded" href="#page-top">
-    <i class="fas fa-angle-up"></i>
-  </a>
-
-  <!-- Logout Modal-->
-  <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-        <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-          <a class="btn btn-danger" href="login.html">Logout</a>
+    <!-- Logout Modal-->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <a class="btn btn-danger" href="login.html">Logout</a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Bootstrap core JavaScript-->
-  <script src="{{url_for('static', filename='vendor/jquery/jquery.min.js')}}"></script>
-  <script src="{{url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+    <!-- Bootstrap core JavaScript-->
+    <script src="{{url_for('static', filename='vendor/jquery/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
 
-  <!-- Core plugin JavaScript-->
-  <script src="{{url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js')}}"></script>
+    <!-- Core plugin JavaScript-->
+    <script src="{{url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js')}}"></script>
 
-  <!-- Custom scripts for all pages-->
-  <script src="{{url_for('static', filename='js/sb-admin-2.min.js')}}"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="{{url_for('static', filename='js/sb-admin-2.min.js')}}"></script>
 
-  <!-- Page level plugins -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+    <!-- Page level plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
 
 
-  {% if results is defined %}
-  <script>
-    // Set new default font family and font color to mimic Bootstrap's default styling
-    Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-    Chart.defaults.global.defaultFontColor = '#858796';
+    {% if results is defined %}
+    <script>
+      // Set new default font family and font color to mimic Bootstrap's default styling
+      Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+      Chart.defaults.global.defaultFontColor = '#858796';
 
-    function number_format(number, decimals, dec_point, thousands_sep) {
-      // *     example: number_format(1234.56, 2, ',', ' ');
-      // *     return: '1 234,56'
-      number = (number + '').replace(',', '').replace(' ', '');
-      var n = !isFinite(+number) ? 0 : +number,
-        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-        sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-        dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-        s = '',
-        toFixedFix = function (n, prec) {
-          var k = Math.pow(10, prec);
-          return '' + Math.round(n * k) / k;
-        };
-      // Fix for IE parseFloat(0.55).toFixed(0) = 0;
-      s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
-      if (s[0].length > 3) {
-        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+      function number_format(number, decimals, dec_point, thousands_sep) {
+        // *     example: number_format(1234.56, 2, ',', ' ');
+        // *     return: '1 234,56'
+        number = (number + '').replace(',', '').replace(' ', '');
+        var n = !isFinite(+number) ? 0 : +number,
+          prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+          sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+          dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+          s = '',
+          toFixedFix = function (n, prec) {
+            var k = Math.pow(10, prec);
+            return '' + Math.round(n * k) / k;
+          };
+        // Fix for IE parseFloat(0.55).toFixed(0) = 0;
+        s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+        if (s[0].length > 3) {
+          s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+        }
+        if ((s[1] || '').length < prec) {
+          s[1] = s[1] || '';
+          s[1] += new Array(prec - s[1].length + 1).join('0');
+        }
+        return s.join(dec);
       }
-      if ((s[1] || '').length < prec) {
-        s[1] = s[1] || '';
-        s[1] += new Array(prec - s[1].length + 1).join('0');
-      }
-      return s.join(dec);
-    }
 
-    var categories = [{% for categorie in results.categories %} "{{categorie}}", {% endfor %}]
-    var categorieNbs = [{% for categorieNb in results.categorieNbs %} "{{categorieNb}}", {% endfor %}]
-    var ctx = document.getElementById("barChart");
-    var myBarChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: categories,
-        datasets: [{
-          label: "Nombre de vidéos",
-          backgroundColor: "#FF5733",
-          hoverBackgroundColor: "#F38663",
-          borderColor: "#4e73df",
-          data: categorieNbs,
-        }],
-      },
-      options: {
-        maintainAspectRatio: false,
-        layout: {
-          padding: {
-            left: 10,
-            right: 25,
-            top: 25,
-            bottom: 0
-          }
-        },
-        scales: {
-          xAxes: [{
-            time: {
-              unit: 'month'
-            },
-            gridLines: {
-              display: false,
-              drawBorder: false
-            },
-            ticks: {
-              maxTicksLimit: 6
-            },
-            maxBarThickness: 25,
+      var categories = [{% for categorie in results.categories %} "{{categorie}}", {% endfor %}]
+      var categorieNbs = [{% for categorieNb in results.categorieNbs %} "{{categorieNb}}", {% endfor %}]
+      var ctx = document.getElementById("barChart");
+      var myBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: categories,
+          datasets: [{
+            label: "Nombre de vidéos",
+            backgroundColor: "#FF5733",
+            hoverBackgroundColor: "#F38663",
+            borderColor: "#4e73df",
+            data: categorieNbs,
           }],
-          yAxes: [{
-            ticks: {
-              min: 0,
-              // Include a dollar sign in the ticks
-              callback: function (value, index, values) {
-                return number_format(value);
+        },
+        options: {
+          maintainAspectRatio: false,
+          layout: {
+            padding: {
+              left: 10,
+              right: 25,
+              top: 25,
+              bottom: 0
+            }
+          },
+          scales: {
+            xAxes: [{
+              time: {
+                unit: 'month'
+              },
+              gridLines: {
+                display: false,
+                drawBorder: false
+              },
+              ticks: {
+                maxTicksLimit: 6
+              },
+              maxBarThickness: 25,
+            }],
+            yAxes: [{
+              ticks: {
+                min: 0,
+                // Include a dollar sign in the ticks
+                callback: function (value, index, values) {
+                  return number_format(value);
+                }
+              },
+              gridLines: {
+                color: "rgb(234, 236, 244)",
+                zeroLineColor: "rgb(234, 236, 244)",
+                drawBorder: false,
+                borderDash: [2],
+                zeroLineBorderDash: [2]
               }
-            },
-            gridLines: {
-              color: "rgb(234, 236, 244)",
-              zeroLineColor: "rgb(234, 236, 244)",
-              drawBorder: false,
-              borderDash: [2],
-              zeroLineBorderDash: [2]
-            }
-          }],
-        },
-        legend: {
-          display: false
-        },
-        tooltips: {
-          titleMarginBottom: 10,
-          titleFontColor: '#6e707e',
-          titleFontSize: 14,
-          backgroundColor: "rgb(255,255,255)",
-          bodyFontColor: "#858796",
-          borderColor: '#dddfeb',
-          borderWidth: 1,
-          xPadding: 15,
-          yPadding: 15,
-          displayColors: false,
-          caretPadding: 10,
-          callbacks: {
-            label: function (tooltipItem, chart) {
-              var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-              return datasetLabel + ': ' + number_format(tooltipItem.yLabel);
-            }
-          }
-        },
-      }
-    });
-  </script>
-
-  <script>
-    // Set new default font family and font color to mimic Bootstrap's default styling
-    Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-    Chart.defaults.global.defaultFontColor = '#858796';
-
-    function number_format(number, decimals, dec_point, thousands_sep) {
-      // *     example: number_format(1234.56, 2, ',', ' ');
-      // *     return: '1 234,56'
-      number = (number + '').replace(',', '').replace(' ', '');
-      var n = !isFinite(+number) ? 0 : +number,
-        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-        sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-        dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-        s = '',
-        toFixedFix = function (n, prec) {
-          var k = Math.pow(10, prec);
-          return '' + Math.round(n * k) / k;
-        };
-      // Fix for IE parseFloat(0.55).toFixed(0) = 0;
-      s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
-      if (s[0].length > 3) {
-        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-      }
-      if ((s[1] || '').length < prec) {
-        s[1] = s[1] || '';
-        s[1] += new Array(prec - s[1].length + 1).join('0');
-      }
-      return s.join(dec);
-    }
-    var dates = [{% for date in results.dateArray %} "{{date}}", {% endfor %}]
-    var viewCounts = [{% for viewCount in results.viewCountArray %} "{{viewCount}}", {% endfor %}]
-    // Area Chart Example
-    var ctx = document.getElementById("myAreaChart");
-    var myLineChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [{
-          label: "Nombre de vues",
-          lineTension: 0.5,
-          backgroundColor: "rgba(252, 87, 51, 0.05)",
-          borderColor: "rgba(255, 87, 51, 1)",
-          pointRadius: 1,
-          pointBackgroundColor: "rgba(255, 87, 51, 1)",
-          pointBorderColor: "rgba(255, 87, 51, 1)",
-          pointHoverRadius: 3,
-          pointHoverBackgroundColor: "rgba(255, 87, 51, 1)",
-          pointHoverBorderColor: "rgba(255, 87, 51, 1)",
-          pointHitRadius: 2,
-          pointBorderWidth: 1,
-          data: viewCounts,
-        }],
-      },
-      options: {
-        maintainAspectRatio: false,
-        layout: {
-          padding: {
-            left: 10,
-            right: 25,
-            top: 25,
-            bottom: 0
-          }
-        },
-        scales: {
-          xAxes: [{
-            time: {
-              unit: 'date'
-            },
-            gridLines: {
-              display: false,
-              drawBorder: false
-            },
-            ticks: {
-              maxTicksLimit: 7
-            }
-          }],
-          yAxes: [{
-            ticks: {
-              maxTicksLimit: 5,
-              padding: 10,
-              // Include a dollar sign in the ticks
-              callback: function (value, index, values) {
-                return number_format(value);
+            }],
+          },
+          legend: {
+            display: false
+          },
+          tooltips: {
+            titleMarginBottom: 10,
+            titleFontColor: '#6e707e',
+            titleFontSize: 14,
+            backgroundColor: "rgb(255,255,255)",
+            bodyFontColor: "#858796",
+            borderColor: '#dddfeb',
+            borderWidth: 1,
+            xPadding: 15,
+            yPadding: 15,
+            displayColors: false,
+            caretPadding: 10,
+            callbacks: {
+              label: function (tooltipItem, chart) {
+                var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+                return datasetLabel + ': ' + number_format(tooltipItem.yLabel);
               }
-            },
-            gridLines: {
-              color: "rgb(234, 236, 244)",
-              zeroLineColor: "rgb(234, 236, 244)",
-              drawBorder: false,
-              borderDash: [2],
-              zeroLineBorderDash: [2]
             }
+          },
+        }
+      });
+    </script>
+
+    <script>
+      // Set new default font family and font color to mimic Bootstrap's default styling
+      Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+      Chart.defaults.global.defaultFontColor = '#858796';
+
+      function number_format(number, decimals, dec_point, thousands_sep) {
+        // *     example: number_format(1234.56, 2, ',', ' ');
+        // *     return: '1 234,56'
+        number = (number + '').replace(',', '').replace(' ', '');
+        var n = !isFinite(+number) ? 0 : +number,
+          prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+          sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+          dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+          s = '',
+          toFixedFix = function (n, prec) {
+            var k = Math.pow(10, prec);
+            return '' + Math.round(n * k) / k;
+          };
+        // Fix for IE parseFloat(0.55).toFixed(0) = 0;
+        s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+        if (s[0].length > 3) {
+          s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+        }
+        if ((s[1] || '').length < prec) {
+          s[1] = s[1] || '';
+          s[1] += new Array(prec - s[1].length + 1).join('0');
+        }
+        return s.join(dec);
+      }
+      var dates = [{% for date in results.dateArray %} "{{date}}", {% endfor %}]
+      var viewCounts = [{% for viewCount in results.viewCountArray %} "{{viewCount}}", {% endfor %}]
+      // Area Chart Example
+      var ctx = document.getElementById("myAreaChart");
+      var myLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: "Nombre de vues",
+            lineTension: 0.5,
+            backgroundColor: "rgba(252, 87, 51, 0.05)",
+            borderColor: "rgba(255, 87, 51, 1)",
+            pointRadius: 1,
+            pointBackgroundColor: "rgba(255, 87, 51, 1)",
+            pointBorderColor: "rgba(255, 87, 51, 1)",
+            pointHoverRadius: 3,
+            pointHoverBackgroundColor: "rgba(255, 87, 51, 1)",
+            pointHoverBorderColor: "rgba(255, 87, 51, 1)",
+            pointHitRadius: 2,
+            pointBorderWidth: 1,
+            data: viewCounts,
           }],
         },
-        legend: {
-          display: false
-        },
-        tooltips: {
-          backgroundColor: "rgb(255,255,255)",
-          bodyFontColor: "#858796",
-          titleMarginBottom: 10,
-          titleFontColor: '#6e707e',
-          titleFontSize: 14,
-          borderColor: '#dddfeb',
-          borderWidth: 1,
-          xPadding: 15,
-          yPadding: 15,
-          displayColors: false,
-          intersect: false,
-          mode: 'index',
-          caretPadding: 10,
-          callbacks: {
-            label: function (tooltipItem, chart) {
-              var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-              return datasetLabel + ': ' + number_format(tooltipItem.yLabel);
+        options: {
+          maintainAspectRatio: false,
+          layout: {
+            padding: {
+              left: 10,
+              right: 25,
+              top: 25,
+              bottom: 0
+            }
+          },
+          scales: {
+            xAxes: [{
+              time: {
+                unit: 'date'
+              },
+              gridLines: {
+                display: false,
+                drawBorder: false
+              },
+              ticks: {
+                maxTicksLimit: 7
+              }
+            }],
+            yAxes: [{
+              ticks: {
+                maxTicksLimit: 5,
+                padding: 10,
+                // Include a dollar sign in the ticks
+                callback: function (value, index, values) {
+                  return number_format(value);
+                }
+              },
+              gridLines: {
+                color: "rgb(234, 236, 244)",
+                zeroLineColor: "rgb(234, 236, 244)",
+                drawBorder: false,
+                borderDash: [2],
+                zeroLineBorderDash: [2]
+              }
+            }],
+          },
+          legend: {
+            display: false
+          },
+          tooltips: {
+            backgroundColor: "rgb(255,255,255)",
+            bodyFontColor: "#858796",
+            titleMarginBottom: 10,
+            titleFontColor: '#6e707e',
+            titleFontSize: 14,
+            borderColor: '#dddfeb',
+            borderWidth: 1,
+            xPadding: 15,
+            yPadding: 15,
+            displayColors: false,
+            intersect: false,
+            mode: 'index',
+            caretPadding: 10,
+            callbacks: {
+              label: function (tooltipItem, chart) {
+                var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+                return datasetLabel + ': ' + number_format(tooltipItem.yLabel);
+              }
             }
           }
         }
-      }
-    });
+      });
 
-  </script>
-  {% endif %}:
+    </script>
+    {% endif %}:
 
-  {% if video_results is defined %}
-  <script>
+    {% if video_results is defined %}
+    <script>
 
-    Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-    Chart.defaults.global.defaultFontColor = '#858796';
-    // Pie Chart Example
+      Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+      Chart.defaults.global.defaultFontColor = '#858796';
+      // Pie Chart Example
 
-    var sentiments = [{% for sentiment in video_results.sentiments %} "{{sentiment}}", {% endfor %}]
+      var sentiments = [{% for sentiment in video_results.sentiments %} "{{sentiment}}", {% endfor %}]
 
-    var ctx2 = document.getElementById("PieChart");
+      var ctx2 = document.getElementById("PieChart");
 
-    var PieChart2 = new Chart(ctx2, {
-      type: 'pie',
-      data: {
-        labels: ['Positive', 'Négative'],
-        datasets: [{
-          data: sentiments,
-          backgroundColor: ['#FF5733', '#FA9F00', '#F8FB00', '#9EFE00', "#FF00FB", "#FE0183", '#FF0000'],
-          hoverBackgroundColor: ['#F38663', '#F5B13A', '#F3F54F', '#B8F94C', "#FB58F9", '#FB54AA', '#FF5A5A'],
-          hoverBorderColor: "rgba(234, 236, 244, 1)",
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        tooltips: {
-          enabled: true,
-          callbacks: {
-            label: function (tooltipItem, data) {
-              //get the concerned dataset
-              var dataset = data.datasets[tooltipItem.datasetIndex];
-              //calculate the total of this data set
-              var sum = dataset.data.reduce((a, b) => parseInt(a, 10) + parseInt(b, 10), 0);
-              //get the current items value
-              var value = dataset.data[tooltipItem.index];
-              var amount = data.labels[tooltipItem.index];
-              return amount + ": " + Math.round(value / sum * 10000) / 100 + "%";
+      var PieChart2 = new Chart(ctx2, {
+        type: 'pie',
+        data: {
+          labels: ['Positive', 'Négative'],
+          datasets: [{
+            data: sentiments,
+            backgroundColor: ['#FF5733', '#FA9F00', '#F8FB00', '#9EFE00', "#FF00FB", "#FE0183", '#FF0000'],
+            hoverBackgroundColor: ['#F38663', '#F5B13A', '#F3F54F', '#B8F94C', "#FB58F9", '#FB54AA', '#FF5A5A'],
+            hoverBorderColor: "rgba(234, 236, 244, 1)",
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          tooltips: {
+            enabled: true,
+            callbacks: {
+              label: function (tooltipItem, data) {
+                //get the concerned dataset
+                var dataset = data.datasets[tooltipItem.datasetIndex];
+                //calculate the total of this data set
+                var sum = dataset.data.reduce((a, b) => parseInt(a, 10) + parseInt(b, 10), 0);
+                //get the current items value
+                var value = dataset.data[tooltipItem.index];
+                var amount = data.labels[tooltipItem.index];
+                return amount + ": " + Math.round(value / sum * 10000) / 100 + "%";
+              }
             }
-          }
+          },
+
+          legend: {
+            display: true,
+            position: "bottom",
+            boxWidth: 20,
+            labels: {
+              fontColor: "#333",
+              fontSize: 14
+            }
+          },
+          cutoutPercentage: 80,
         },
-
-        legend: {
-          display: true,
-          position: "bottom",
-          boxWidth: 20,
-          labels: {
-            fontColor: "#333",
-            fontSize: 14
-          }
-        },
-        cutoutPercentage: 80,
-      },
-    });
+      });
 
 
-  </script>
+    </script>
 
 
-  {% endif %}
+    {% endif %}
 </body>
 
 </html>
